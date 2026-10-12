@@ -1,0 +1,92 @@
+{
+  "name": "@gripflow/kanban",
+  "version": "0.1.0",
+  "description": "Kanban board drag and drop for React (Gripflow): move cards and columns, WIP limits, transition rules, keyboard support and optimistic updates.",
+  "keywords": [
+    "gripflow",
+    "drag-and-drop",
+    "drag and drop",
+    "dnd",
+    "typescript",
+    "headless",
+    "accessible",
+    "keyboard",
+    "react",
+    "kanban",
+    "kanban-board",
+    "board",
+    "trello",
+    "cards",
+    "columns",
+    "optimistic-ui",
+    "nextjs"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./react": {
+      "import": {
+        "types": "./dist/react/index.d.ts",
+        "default": "./dist/react/index.js"
+      },
+      "require": {
+        "types": "./dist/react/index.d.cts",
+        "default": "./dist/react/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@gripflow/core": "0.1.0"
+  },
+  "peerDependencies": {
+    "@gripflow/react": "0.1.0",
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@gripflow/react": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/REPLACE-ME/gripflow.git",
+    "directory": "packages/kanban"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "homepage": "https://github.com/REPLACE-ME/gripflow#readme",
+  "bugs": {
+    "url": "https://github.com/REPLACE-ME/gripflow/issues"
+  }
+}

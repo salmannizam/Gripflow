@@ -1,0 +1,63 @@
+{
+  "name": "@gripflow/core",
+  "version": "0.1.0",
+  "description": "Gripflow core: framework-independent, headless drag and drop engine with pointer, touch and keyboard sensors, collision detection, modifiers, sortable model and auto-scroll.",
+  "keywords": [
+    "gripflow",
+    "drag-and-drop",
+    "drag and drop",
+    "dnd",
+    "typescript",
+    "headless",
+    "accessible",
+    "keyboard",
+    "sortable",
+    "collision-detection",
+    "sensors",
+    "auto-scroll",
+    "vanilla-js"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/REPLACE-ME/gripflow.git",
+    "directory": "packages/core"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "homepage": "https://github.com/REPLACE-ME/gripflow#readme",
+  "bugs": {
+    "url": "https://github.com/REPLACE-ME/gripflow/issues"
+  }
+}

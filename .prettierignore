@@ -1,0 +1,10 @@
+node_modules
+dist
+.next
+coverage
+package-lock.json
+*.tgz
+examples/*/package-lock.json
+playwright-report
+test-results
+CHANGELOG.md

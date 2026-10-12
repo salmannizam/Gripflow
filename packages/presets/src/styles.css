@@ -1,0 +1,152 @@
+/*
+ * Gripflow optional base styles. Import only if you want a neutral starting point:
+ *   import "@gripflow/presets/styles.css";
+ *
+ * Every rule is wrapped in :where() (specificity 0), so any class of yours overrides it.
+ * Everything is driven by CSS variables; set them on any ancestor to re-theme.
+ * Nothing here is required: the components work with no stylesheet at all.
+ */
+:where([data-gripflow-list]) {
+  --fd-gap: 0.5rem;
+  --fd-columns: 3;
+  --fd-item-padding: 0.625rem 0.75rem;
+  --fd-item-bg: Canvas;
+  --fd-item-color: CanvasText;
+  --fd-item-border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  --fd-item-radius: 0.5rem;
+  --fd-accent: Highlight;
+  --fd-invalid: #b42318;
+  --fd-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+  --fd-focus-ring: 2px solid var(--fd-accent);
+}
+
+:where([data-gripflow-list][data-layout="vertical"]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fd-gap);
+}
+:where([data-gripflow-list][data-layout="horizontal"]) {
+  display: flex;
+  flex-direction: row;
+  gap: var(--fd-gap);
+}
+:where([data-gripflow-list][data-layout="grid"]) {
+  display: grid;
+  grid-template-columns: repeat(var(--fd-columns), minmax(0, 1fr));
+  gap: var(--fd-gap);
+}
+
+:where([data-gripflow-item]:not(tr)),
+:where([data-gripflow-overlay] > *) {
+  padding: var(--fd-item-padding);
+  background: var(--fd-item-bg);
+  color: var(--fd-item-color);
+  border: var(--fd-item-border);
+  border-radius: var(--fd-item-radius);
+}
+
+:where([data-gripflow-item]:focus-visible),
+:where([data-gripflow-handle]:focus-visible) {
+  outline: var(--fd-focus-ring);
+  outline-offset: 2px;
+}
+
+/* The in-list item acts as the placeholder while the overlay carries the preview. */
+:where([data-gripflow-item][data-dragging]) {
+  opacity: 0.45;
+  border-style: dashed;
+}
+:where([data-gripflow-item][data-disabled]) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+:where([data-gripflow-item][data-over]:not([data-invalid])) {
+  outline: 2px solid var(--fd-accent);
+  outline-offset: -2px;
+}
+/* Invalid targets are signalled by shape (dashed, hatched) as well as colour. */
+:where([data-gripflow-item][data-invalid]) {
+  outline: 2px dashed var(--fd-invalid);
+  outline-offset: -2px;
+}
+:where([data-gripflow-list][data-invalid]) {
+  outline: 2px dashed var(--fd-invalid);
+  outline-offset: 4px;
+}
+:where([data-gripflow-list][data-drop-target]) {
+  outline: 2px solid var(--fd-accent);
+  outline-offset: 4px;
+}
+:where([data-gripflow-list][data-empty]) {
+  min-height: 3rem;
+}
+
+:where([data-gripflow-item]:not([data-disabled]):not(:has([data-gripflow-handle]))) {
+  cursor: grab;
+  touch-action: manipulation;
+}
+:where([data-gripflow-handle]) {
+  cursor: grab;
+  touch-action: none;
+}
+:where(button[data-gripflow-handle]) {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0.25rem;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  border-radius: 0.25rem;
+}
+
+:where([data-gripflow-overlay]) {
+  box-shadow: var(--fd-shadow);
+  cursor: grabbing;
+}
+:where([data-gripflow-overlay] > *) {
+  box-shadow: var(--fd-shadow);
+}
+
+/* Table preset */
+:where([data-gripflow-table]) {
+  border-collapse: collapse;
+  width: 100%;
+}
+:where([data-gripflow-table] th, [data-gripflow-table] td) {
+  padding: 0.5rem 0.75rem;
+  text-align: start;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+:where([data-gripflow-table] tr[data-gripflow-item][data-dragging]) {
+  background: color-mix(in srgb, var(--fd-accent) 12%, Canvas);
+  position: relative;
+  z-index: 1;
+  box-shadow: var(--fd-shadow);
+  opacity: 1;
+}
+:where([data-gripflow-handle-cell]) {
+  width: 2.5rem;
+}
+:where([data-gripflow-visually-hidden]) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-gripflow-item]) {
+    transition: none !important;
+  }
+}
+@media (forced-colors: active) {
+  :where([data-gripflow-item][data-over]) {
+    outline-color: Highlight;
+  }
+  :where([data-gripflow-item][data-invalid]) {
+    outline-color: LinkText;
+  }
+}

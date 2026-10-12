@@ -1,0 +1,16 @@
+node_modules
+dist
+.next
+.turbo
+coverage
+*.tgz
+.env
+.env.*
+!.env.example
+playwright-report
+test-results
+.DS_Store
+artifacts/tarballs
+examples/*/node_modules
+examples/*/.next
+examples/*/dist

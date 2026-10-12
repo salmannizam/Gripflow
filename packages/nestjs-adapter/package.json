@@ -1,0 +1,70 @@
+{
+  "name": "@gripflow/nestjs-adapter",
+  "version": "0.1.0",
+  "description": "Server contracts for persisting Gripflow moves (list reorder, Kanban, tree): request validation, rule and permission checks, optimistic-update client helpers. Works with NestJS, Express or any Node backend.",
+  "keywords": [
+    "gripflow",
+    "drag-and-drop",
+    "drag and drop",
+    "dnd",
+    "typescript",
+    "headless",
+    "accessible",
+    "keyboard",
+    "nestjs",
+    "express",
+    "node",
+    "api",
+    "persistence",
+    "optimistic-update",
+    "validation"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@gripflow/core": "0.1.0",
+    "@gripflow/kanban": "0.1.0",
+    "@gripflow/tree": "0.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/REPLACE-ME/gripflow.git",
+    "directory": "packages/nestjs-adapter"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "homepage": "https://github.com/REPLACE-ME/gripflow#readme",
+  "bugs": {
+    "url": "https://github.com/REPLACE-ME/gripflow/issues"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "paths": {
+      "@gripflow/core": ["./packages/core/src/index.ts"],
+      "@gripflow/react": ["./packages/react/src/index.ts"],
+      "@gripflow/tree": ["./packages/tree/src/index.ts"],
+      "@gripflow/tree/react": ["./packages/tree/src/react/index.ts"],
+      "@gripflow/kanban": ["./packages/kanban/src/index.ts"],
+      "@gripflow/kanban/react": ["./packages/kanban/src/react/index.ts"],
+      "@gripflow/presets": ["./packages/presets/src/index.ts"],
+      "@gripflow/nestjs-adapter": ["./packages/nestjs-adapter/src/index.ts"]
+    }
+  },
+  "include": ["packages/*/src", "packages/*/test", "tests", "apps/playground/src", "e2e", "*.ts"],
+  "exclude": ["**/dist", "**/node_modules"]
+}
