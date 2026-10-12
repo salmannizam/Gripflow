@@ -1,6 +1,6 @@
 {
   "name": "@gripflow/nestjs-adapter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Server contracts for persisting Gripflow moves (list reorder, Kanban, tree): request validation, rule and permission checks, optimistic-update client helpers. Works with NestJS, Express or any Node backend.",
   "keywords": [
     "gripflow",
@@ -20,6 +20,10 @@
     "validation"
   ],
   "license": "MIT",
+  "author": {
+    "name": "salmannizam",
+    "url": "https://github.com/salmannizam"
+  },
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -48,9 +52,9 @@
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
   },
   "dependencies": {
-    "@gripflow/core": "0.1.0",
-    "@gripflow/kanban": "0.1.0",
-    "@gripflow/tree": "0.1.0"
+    "@gripflow/core": "^0.1.0",
+    "@gripflow/kanban": "^0.1.0",
+    "@gripflow/tree": "^0.1.0"
   },
   "repository": {
     "type": "git",

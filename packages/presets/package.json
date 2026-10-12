@@ -1,6 +1,6 @@
 {
   "name": "@gripflow/presets",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Ready-made React sortable list, grid and table components for Gripflow, with an optional CSS-variable stylesheet. Bring your own markup and styling.",
   "keywords": [
     "gripflow",
@@ -22,6 +22,10 @@
     "nextjs"
   ],
   "license": "MIT",
+  "author": {
+    "name": "salmannizam",
+    "url": "https://github.com/salmannizam"
+  },
   "type": "module",
   "sideEffects": [
     "**/*.css"
@@ -53,10 +57,10 @@
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
   },
   "dependencies": {
-    "@gripflow/core": "0.1.0"
+    "@gripflow/core": "^0.1.0"
   },
   "peerDependencies": {
-    "@gripflow/react": "0.1.0",
+    "@gripflow/react": "^0.1.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
   },

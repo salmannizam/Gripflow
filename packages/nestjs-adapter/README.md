@@ -1,62 +1,210 @@
+<div align="center">
+
 # @gripflow/nestjs-adapter
 
-Server-side helpers for saving Gripflow drag-and-drop moves safely: list reorders, Kanban card and
-column moves, and tree moves. It validates untrusted request bodies, checks your rules and
-permissions on the server, and returns the canonical order so the client can resync. It does **not**
-depend on NestJS: use it from NestJS, Express, Next.js route handlers or any Node backend.
+**Safely save drag-and-drop changes on your server.**
+Validated move requests, server-side rules and permission checks, and optimistic-update helpers for NestJS, Express, Next.js route handlers or any Node backend.
+
+[![npm](https://img.shields.io/npm/v/@gripflow/nestjs-adapter?color=cb3837&logo=npm)](https://www.npmjs.com/package/@gripflow/nestjs-adapter)
+[![types](https://img.shields.io/npm/types/@gripflow/nestjs-adapter)](https://www.npmjs.com/package/@gripflow/nestjs-adapter)
+[![license](https://img.shields.io/npm/l/@gripflow/nestjs-adapter)](https://github.com/salmannizam/Gripflow/blob/main/LICENSE)
+
+</div>
+
+The browser can be wrong, stale, or malicious, so a drag-and-drop UI should never be the only place
+where your rules are enforced. This package gives you the server half:
+
+- **Validates** untrusted request bodies (never throws, never leaks internals)
+- **Re-checks your rules on the server**: Kanban WIP limits and transitions, tree depth and hierarchy
+- **Authorization hook**: decide who may move what
+- **Conflict detection**: stale state is detected and the server's canonical order is sent back
+- **Client helpers** for optimistic updates with rollback
+- **Framework-agnostic**: despite the name it has **no NestJS dependency**. Use it from NestJS, Express, Fastify, Hono, serverless functions or Next.js route handlers
+
+You bring the database (through a small `MoveStore`) and the HTTP layer. This package never makes network
+calls itself.
+
+## Install
 
 ```bash
 npm install @gripflow/nestjs-adapter
 ```
 
-## Server
+It uses `@gripflow/kanban` and `@gripflow/tree` for the move rules (installed automatically).
+
+## How it works
+
+```
+Browser                              Your server
+-------                              -----------
+drag a card ──► UI updates instantly
+            ──► POST /api/move  ───►  handler(body, ctx)
+                                       1. validate the payload
+                                       2. load current state (your database)
+                                       3. authorize (your permission check)
+                                       4. check version / apply rules
+                                       5. save (your database)
+            ◄── { ok, order }  ◄───   returns the canonical order
+UI matches the server order
+(or rolls back if { ok: false })
+```
+
+## Server: a Kanban board endpoint
 
 ```ts
-import { createBoardMoveHandler, httpStatusFor, type MoveStore } from "@gripflow/nestjs-adapter";
+import {
+  createBoardMoveHandler,
+  httpStatusFor,
+  type MoveStore,
+} from "@gripflow/nestjs-adapter";
 
 type Card = { id: string; title: string };
 type Column = { id: string; title: string; cards: Card[] };
+type Ctx = { userId: string };
 
-const store: MoveStore<readonly Column[], { userId: string }> = {
+// 1. Tell the handler how to load and save the board (your database code).
+const store: MoveStore<readonly Column[], Ctx> = {
   async load(_request, ctx) {
-    return { state: await db.loadBoard(ctx.userId) };
+    const board = await db.boards.findForUser(ctx.userId);
+    return { state: board.columns, version: board.version };
   },
   async save(next, { ctx }) {
-    await db.saveBoard(ctx.userId, next); // use a transaction or row lock for concurrent writers
+    const version = await db.boards.replaceColumns(ctx.userId, next);
+    return { version };
   },
 };
 
-const handleMove = createBoardMoveHandler<Column, { userId: string }>({
+// 2. Create the handler once. Rules are enforced here, on the server.
+export const moveHandler = createBoardMoveHandler<Column, Ctx>({
   store,
-  rules: { transitions: { todo: ["doing"] } },
-  authorize: ({ ctx, state }) => canEdit(ctx.userId, state),
+  rules: {
+    maxCards: (column) => (column.id === "doing" ? 5 : undefined),
+    transitions: { todo: ["doing"], doing: ["todo", "done"] },
+  },
+  authorize: ({ ctx, state }) => canEditBoard(ctx.userId, state),
 });
 
-// In your route (any framework):
-//   const result = await handleMove(body, { userId });
-//   respond(result.ok ? 200 : httpStatusFor(result.code), result);
+// 3. Call it from any route. The handler never throws.
+export async function POST(request: Request) {
+  const userId = await getUserId(request); // your auth
+  const response = await moveHandler(await request.json(), { userId });
+  return Response.json(response, { status: httpStatusFor(response) });
+}
 ```
 
-Handlers never throw and never leak internal errors. Rejections include the current server order and
-a `code` such as `rule-violation`, `forbidden`, `conflict`, `not-found` or `invalid-request`.
-`createListMoveHandler` and `createTreeMoveHandler` work the same way. Send `expectedVersion` from the
-client (via `getVersion`) to detect stale writes.
+The example above is a Next.js route handler (`app/api/board/move/route.ts`). The same handler works
+unchanged in any framework.
 
-## Client
+### NestJS controller
 
 ```ts
-import { createBoardPersister } from "@gripflow/nestjs-adapter";
-import { useOptimisticBoard } from "@gripflow/kanban/react";
-
-const board = useOptimisticBoard(initialColumns, {
-  persist: createBoardPersister(async (request) => {
-    const res = await fetch("/api/move", { method: "POST", body: JSON.stringify(request) });
-    return res.json();
-  }),
-});
-// <KanbanBoard columns={board.columns} onChange={board.onChange} ... />
+@Controller("board")
+export class BoardController {
+  @Post("move")
+  async move(@Body() body: unknown, @Req() req: AuthedRequest, @Res() res: Response) {
+    const response = await moveHandler(body, { userId: req.user.id });
+    res.status(httpStatusFor(response)).json(response);
+  }
+}
 ```
 
-On a rejected move the board rolls back; the thrown `MoveRejectedError` carries the server's order.
+### Express
 
-MIT licensed.
+```ts
+app.post("/api/board/move", async (req, res) => {
+  const response = await moveHandler(req.body, { userId: req.user.id });
+  res.status(httpStatusFor(response)).json(response);
+});
+```
+
+## Other handlers
+
+| Handler | Request `type` | State you store |
+| --- | --- | --- |
+| `createBoardMoveHandler` | `"card"`, `"column"` | `Column[]` with `cards` |
+| `createListMoveHandler` | `"reorder"` | Ordered id list |
+| `createTreeMoveHandler` | `"tree"` | Nested nodes (`{ id, children? }`) |
+
+All three take `{ store, authorize? }` (board and tree also take `rules`), and return a function
+`(body: unknown, ctx) => Promise<MoveResponse>`.
+
+## Client: optimistic updates with rollback (Kanban)
+
+```tsx
+"use client";
+
+import { KanbanBoard, useOptimisticBoard } from "@gripflow/kanban/react";
+import { createBoardPersister, isMoveRejectedError } from "@gripflow/nestjs-adapter";
+
+export function Board({ initial }: { initial: Column[] }) {
+  const board = useOptimisticBoard(initial, {
+    persist: createBoardPersister<Column>(async (request) => {
+      const res = await fetch("/api/board/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+      });
+      return res.json(); // the server's MoveResponse
+    }),
+    onRejected: ({ error }) => {
+      if (isMoveRejectedError(error)) toast(error.message); // e.g. "A column may hold at most 5 cards."
+    },
+  });
+
+  return <KanbanBoard columns={board.columns} onChange={board.onChange} renderColumn={…} renderCard={…} />;
+}
+```
+
+What happens: the UI updates instantly; the request is sent; on success the board is replaced with the
+**server's canonical order**; on rejection the board **rolls back** and `onRejected` receives a
+`MoveRejectedError` with a safe-to-show `message`, a `code`, and the server's current `order`.
+
+### Lists and trees
+
+```ts
+import { sortableMoveToRequest, treeMoveToRequest } from "@gripflow/nestjs-adapter";
+
+// SortableList / useSortable:  onItemsChange={(next, move) => send(sortableMoveToRequest("my-list", move))}
+// TreeDnd:                      onChange={(next, move) => send(treeMoveToRequest(move))}
+```
+
+## Responses
+
+Success: `{ ok: true, order, version? }`.
+Rejection: `{ ok: false, code, message, detail?, order?, version? }`.
+
+| `code` | Meaning | `httpStatusFor` |
+| --- | --- | --- |
+| `invalid-request` | Payload failed validation | 400 |
+| `forbidden` | Your `authorize` said no | 403 |
+| `not-found` | Item, column or parent does not exist | 404 |
+| `conflict` | The client was stale, use the returned `order` to resync | 409 |
+| `rule-violation` | A rule such as WIP limit or hierarchy blocked it (see `detail`) | 422 |
+| `internal` | Your `store` threw. Details are not leaked | 500 |
+
+## Concurrency and security notes
+
+- Send `expectedVersion` (via the `getVersion` option of `createBoardPersister`) and return a `version`
+  from your store to detect stale writes.
+- Between `load` and `save`, two requests can race. Use a database transaction or row lock if that matters;
+  this package cannot do it for you.
+- Always run your own authentication before calling the handler, and use `authorize` for per-item permissions.
+- Errors thrown by your `store` or `authorize` become an `internal` response, never a stack trace.
+
+## Pure helpers
+
+`parseMoveRequest(body)`, `applyBoardRequest`, `applyReorderRequest`, `applyTreeRequest`,
+`getBoardOrderData` / `applyBoardOrderData`, `getListOrder` / `applyListOrder`, `getTreeOrder` /
+`applyTreeOrder`, `createMoveHandler` (build a handler for your own request type).
+
+## Related packages
+
+[`@gripflow/kanban`](https://www.npmjs.com/package/@gripflow/kanban) ·
+[`@gripflow/tree`](https://www.npmjs.com/package/@gripflow/tree) ·
+[`@gripflow/presets`](https://www.npmjs.com/package/@gripflow/presets) ·
+[`@gripflow/react`](https://www.npmjs.com/package/@gripflow/react)
+
+## Author
+
+Created and maintained by [salmannizam](https://github.com/salmannizam). Issues and ideas are welcome on
+[GitHub](https://github.com/salmannizam/Gripflow/issues). MIT licensed.
